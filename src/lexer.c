@@ -60,12 +60,25 @@ lexer_node_t *_node_new_token( char *source, int start, int end ) {
     return qalloc( node );
 }
 
+lexer_node_t *_node_new_token_character( char character ) {
+    lexer_node_t node = {
+        .type = LEXER_NODE_TOKEN,
+        .data = calloc( 2, sizeof(char) )
+    };
+
+    ( (char*)node.data )[0] = character;
+
+    return qalloc( node );
+}
+
 
 lexer_node_t *lexer_process_source( const char *source ) {
     if ( source == NULL )
         return NULL;
 
     lexer_node_t *root = _node_new_list();
+    list_t node_stack = new_list();
+    _list_append( &node_stack, root );
     
     enum {
         STATE_NONE,
@@ -78,7 +91,6 @@ lexer_node_t *lexer_process_source( const char *source ) {
 
     int token_start = 0;
 
-    static const char singular_tokens[] = "(){};";
 
     for ( int i = 0; i < (int)strlen( source ); i++ ) {
         switch ( state ) {
@@ -88,18 +100,48 @@ lexer_node_t *lexer_process_source( const char *source ) {
                     token_start = i;
                     state = STATE_TOKEN_ALNUM;
                 }
-                else if ( tstr_find( (char*)singular_tokens, source[i] ) > -1 ) {
-                    _node_list_append(
-                        root,
-                        _node_new_token( (char*)source, i, i + 1 )
-                    );
+                else switch ( source[i] ) {
+                    case '(':
+                    case '{':
+                        _node_list_append(
+                            node_stack.head->value,
+                            _node_new_token_character( source[i] )
+                        );
+                        lexer_node_t *node = _node_new_list();
+                        _node_list_append(
+                            node_stack.head->value,
+                            node
+                        );
+                        _list_append( &node_stack, node );
+                        break;
+                    case ')':
+                    case '}':
+                        _list_pop( &node_stack, node_stack.head );
+                        if ( node_stack.head == NULL ) {
+                            printf( "Error!\n" );
+                            return NULL;
+                        }
+                        _node_list_append(
+                            node_stack.head->value,
+                           _node_new_token_character( source[i] )
+                        );
+                        break;
+                    case ';':
+                    case ',':
+                    case ':':
+                    case '\'':
+                        _node_list_append(
+                            node_stack.head->value,
+                            _node_new_token_character( source[i] )
+                        );
+                        break;
                 }
                 break;
 
             case STATE_TOKEN_ALNUM:
                 if ( !isalnum( source[i] ) ) {
                     _node_list_append(
-                        root,
+                        node_stack.head->value,
                         _node_new_token( (char*)source, token_start, i )
                     );
                     state = STATE_NONE;
@@ -108,7 +150,7 @@ lexer_node_t *lexer_process_source( const char *source ) {
                 break;
         }
     }
-
+    _list_disband( &node_stack );
     return root;
 }
 
