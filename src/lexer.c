@@ -78,12 +78,21 @@ lexer_node_t *lexer_process_source( const char *source ) {
 
     int token_start = 0;
 
+    static const char singular_tokens[] = "(){};";
+
     for ( int i = 0; i < (int)strlen( source ); i++ ) {
         switch ( state ) {
             case STATE_NONE:
+            _label_state_none:
                 if ( isalnum( source[i] ) ) {
                     token_start = i;
                     state = STATE_TOKEN_ALNUM;
+                }
+                else if ( tstr_find( (char*)singular_tokens, source[i] ) > -1 ) {
+                    _node_list_append(
+                        root,
+                        _node_new_token( (char*)source, i, i + 1 )
+                    );
                 }
                 break;
 
@@ -94,6 +103,7 @@ lexer_node_t *lexer_process_source( const char *source ) {
                         _node_new_token( (char*)source, token_start, i )
                     );
                     state = STATE_NONE;
+                    goto _label_state_none;
                 }
                 break;
         }
