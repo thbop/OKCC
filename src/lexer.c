@@ -161,6 +161,7 @@ void _print_indent( int indent ) {
 }
 
 void _print_node( lexer_node_t *node, int indent ) {
+    if ( node == NULL ) return;
     switch ( node->type ) {
         case LEXER_NODE_LIST:
             for ( int i = 0; i < lexer_node_list_size( node ); i++ ) {
@@ -179,6 +180,7 @@ void lexer_print_node( lexer_node_t *node ) {
 }
 
 void lexer_free_node( lexer_node_t *node ) {
+    if ( node == NULL ) return;
     if ( node->type == LEXER_NODE_LIST ) {
         for ( int i = 0; i < lexer_node_list_size( node ); i++ ) {
             lexer_free_node( lexer_node_list_at( node, i ) );
