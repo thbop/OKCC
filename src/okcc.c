@@ -22,8 +22,16 @@
 
 #include "stdio.h"
 
+#include "lexer.h"
+
 int main() {
-    printf( "Hello World" );
+    char source[] = "int main() { return 0; }";
+
+    lexer_node_t *root = lexer_process_source( source );
+
+    lexer_print_node( root );
+
+    lexer_free_node( root );
 
     return 0;
 }

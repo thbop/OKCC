@@ -1,12 +1,20 @@
 CC = gcc
-CFLAGS = -fdiagnostics-color=always -g
+CFLAGS = -fdiagnostics-color=always -g -c -Iinclude -Wall
 
 SRC_DIR = src
 BIN_DIR = bin
 
-all: okcc
+all: always lexer okcc link
 
+always:
+	mkdir -p bin
+
+lexer:
+	$(CC) $(CFLAGS) $(SRC_DIR)/lexer.c -o $(BIN_DIR)/lexer.o
 
 okcc:
-	mkdir -p bin
-	$(CC) $(CFLAGS) $(SRC_DIR)/okcc.c -o $(BIN_DIR)/okcc.exe
+	$(CC) $(CFLAGS) $(SRC_DIR)/okcc.c -o $(BIN_DIR)/okcc.o
+
+link:
+	$(CC) $(BIN_DIR)/lexer.o $(BIN_DIR)/okcc.o -o $(BIN_DIR)/okcc.exe
+	rm bin/*.o
